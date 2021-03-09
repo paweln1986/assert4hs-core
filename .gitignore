@@ -1,0 +1,5 @@
+.stack-work/
+*~
+assert4hs.cabal
+hie-logs.log
+stack.yaml.lock

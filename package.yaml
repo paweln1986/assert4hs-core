@@ -1,10 +1,10 @@
 name:                assert4hs
-version:             0.1.0.0
+version:             0.0.0.1
 github:              "githubuser/assert4hs"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+license:             MIT
+author:              "Pawel Nosal"
+maintainer:          "p.nosal1986@gmail.com"
+copyright:           "2021 Pawel Nosal"
 
 extra-source-files:
 - README.md
@@ -12,12 +12,12 @@ extra-source-files:
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
-# category:            Web
+# category:            Testing
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/assert4hs#readme>
+description:         Please see the README on GitHub at <https://github.com/paweln1986/assert4hs#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -28,6 +28,7 @@ dependencies:
 
 default-extensions:
   - OverloadedStrings
+  - BangPatterns
 
 ghc-options:
   - -haddock

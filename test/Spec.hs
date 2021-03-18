@@ -1,6 +1,15 @@
 {-# LANGUAGE TypeApplications #-}
+
 import Test.Fluent.Assertions
-import Test.Fluent.Tasty.TestCase
+  ( assertThat,
+    focus,
+    inside,
+    isEqualTo,
+    isGreaterThan,
+    isLowerThan,
+    tag,
+  )
+import Test.Fluent.Tasty.TestCase (fluentTestCase)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 
 main :: IO ()
@@ -30,6 +39,11 @@ unitTests =
                   . isLowerThan 3
           ],
       fluentTestCase "sadf" $
-        assertThat [1, 2, 3, 5, 65] $
-          isEqualTo [11, 2, 3, 5, 65]
+        assertThat (Foo "someName" 15) $
+          tag "foo"
+            . isEqualTo (Foo "someN1ame" 15)
+            . inside age (tag "age" . isGreaterThan 20 . isLowerThan 10)
+            . isEqualTo (Foo "someName" 15)
+      , fluentTestCase "sadf" $
+        assertThat 15 $ isEqualTo 16
     ]

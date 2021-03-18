@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK hide, prune, ignore-exports #-}
 module Test.Fluent.Internal.Assertions where
 
 import Control.Exception (Exception, throwIO, try)
@@ -28,7 +29,7 @@ data AssertionDefinition a
       }
 
 updateLabel :: String -> AssertionDefinition a -> AssertionDefinition a
-updateLabel _ assert@(SimpleAssertion _ (Just _)) = assert
+updateLabel newLabel (SimpleAssertion assert (Just oldLabel)) = SimpleAssertion assert (Just $ newLabel <> "." <> oldLabel)
 updateLabel assertionLabel (SimpleAssertion a Nothing) = SimpleAssertion a (Just assertionLabel)
 updateLabel assertionLabel (Assertions (x : xs)) = Assertions (updateLabel assertionLabel x : fmap (updateLabel assertionLabel) xs)
 updateLabel _ (Assertions []) = Assertions []
@@ -69,6 +70,16 @@ flattenAssertions :: AssertionDefinition a -> [a -> IO ()]
 flattenAssertions (Assertions assertions) = assertions >>= flattenAssertions
 flattenAssertions (SimpleAssertion assert assertionLabel) = [assert assertionLabel]
 
+transformAssertions :: [AssertionDefinition a] -> (b -> a) -> [AssertionDefinition b]
+transformAssertions ((SimpleAssertion assert assertionLabel) : xs) f = SimpleAssertion (\l b -> assert (orElse l assertionLabel) (f b)) assertionLabel : transformAssertions xs f
+transformAssertions ((Assertions assertions) : xs) f = Assertions (transformAssertions assertions f) : transformAssertions xs f
+transformAssertions [] _ = []
+
+orElse :: Maybe a -> Maybe a -> Maybe a
+x `orElse` y = case x of
+  Just _ -> x
+  Nothing -> y
+
 basicAssertion :: (a -> Bool) -> (a -> String) -> AssertionDefinition a -> AssertionDefinition a
 basicAssertion predicate messageFormatter b = b <> SimpleAssertion assert Nothing
   where
@@ -80,3 +91,5 @@ basicAssertion predicate messageFormatter b = b <> SimpleAssertion assert Nothin
 type Assertion s t a b = (a -> AssertionDefinition b) -> s -> AssertionDefinition t
 
 type Assertion' s t = Assertion s s t t
+
+

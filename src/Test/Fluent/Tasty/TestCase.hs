@@ -33,14 +33,15 @@ instance IsTest FluentTestCase where
     pure $
       case result of
         Right info -> testPassed info
-        Left (FluentTestFailure srcLoc msg errors successes) -> testFailedDetails (prependLocation srcLoc msg) (failedAssertionResultPrinter errors successes)
+        Left (FluentTestFailure _ msg errors successes) -> testFailedDetails (prependLocation msg) (failedAssertionResultPrinter errors successes)
   testOptions = pure []
 
-prependLocation :: Maybe SrcLoc -> [String] -> String
-prependLocation mbloc s =
-  case mbloc of
-    Nothing -> intercalate "\n\n" s
-    Just loc -> srcLocFile loc ++ ":" ++ show (srcLocStartLine loc) ++ ":\n" ++ intercalate "\n" s
+prependLocation :: [(String, Maybe SrcLoc)] -> String
+prependLocation assertionErrors = intercalate "\n\n" $ fmap toLine assertionErrors
+  where
+    toLine (s, mbloc) = case mbloc of
+      Nothing -> s
+      Just loc -> "(" <> srcLocFile loc ++ ":" ++ show (srcLocStartLine loc) <> "): \n" <> s
 
 fluentTestCase :: TestName -> IO () -> TestTree
 fluentTestCase name = singleTest name . FluentTestCase . fmap (const "")

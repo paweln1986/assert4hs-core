@@ -3,10 +3,13 @@
 import Test.Fluent.Assertions
   ( assertThat,
     focus,
+    hasSize,
     inside,
+    isEmpty,
     isEqualTo,
     isGreaterThan,
     isLowerThan,
+    isNotEqualTo,
     tag,
   )
 import Test.Fluent.Tasty.TestCase (fluentTestCase)
@@ -26,24 +29,15 @@ unitTests =
     "Unit tests"
     [ testGroup
         "Unit tests"
-        $ [ fluentTestCase "test fluent1" $
-              assertThat @String "1    " $
-                isEqualTo ""
-                  . isEqualTo "1    "
-                  . tag "length"
-                  . focus length
-                  . isEqualTo 50000
-                  . isEqualTo 1
-                  . tag "dupa"
-                  . isGreaterThan 1000
-                  . isLowerThan 3
-          ],
+        [ fluentTestCase "test fluent1" $
+            assertThat @String "1    " $ isNotEqualTo "" . focus length . isEqualTo 10 . tag "sdfadasdaf"
+        ],
       fluentTestCase "sadf" $
         assertThat (Foo "someName" 15) $
-          tag "foo"
-            . isEqualTo (Foo "someN1ame" 15)
+          tag "foo" . isEqualTo (Foo "someN1ame" 15)
             . inside age (tag "age" . isGreaterThan 20 . isLowerThan 10)
-            . isEqualTo (Foo "someName" 15)
-      , fluentTestCase "sadf" $
-        assertThat 15 $ isEqualTo 16
+            . tag "not equal to"
+            . isNotEqualTo (Foo "someName" 15),
+      fluentTestCase "sadf" $
+        assertThat [16 :: Integer] $ hasSize 10 . isEmpty
     ]

@@ -124,7 +124,7 @@ isEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion a
 isEqualTo a = simpleAssertion (a ==) (formatMessage True "should be equal to" a)
 
 isNotEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion a
-isNotEqualTo a = simpleAssertion (a /=) (formatMessage True "should be not equal to" a)
+isNotEqualTo a = simpleAssertion (a /=) (formatMessage False "should be not equal to" a)
 
 -- | assert if the subject under test is greater than given value
 --
@@ -161,7 +161,7 @@ isLowerEqualThan :: (Ord a, Show a, HasCallStack) => a -> Assertion a
 isLowerEqualThan a = simpleAssertion (a >=) (formatMessage False "should be lower or equal to" a)
 
 shouldSatisfy :: (Show a, HasCallStack) => (a -> Bool) -> Assertion a
-shouldSatisfy predicate = simpleAssertion predicate (formatMessage' "does not met a given predicate")
+shouldSatisfy predicate = simpleAssertion predicate (formatMessage' "does not met a predicate")
 
 hasSize :: (Foldable t, HasCallStack) => Int -> Assertion (t a)
 hasSize expectedSize = inside length (simpleAssertion (== expectedSize) assertionMessage)

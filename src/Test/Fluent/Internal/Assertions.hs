@@ -44,7 +44,7 @@ instance Contravariant AssertionDefinition where
   contramap f (SequentialAssertions assertions) = SequentialAssertions (fmap (contramap f) assertions)
   contramap f (SimpleAssertion assert assertionLabel) = SimpleAssertion (\l -> assert l . f) assertionLabel
 
-instance Semigroup (AssertionDefinition a) where -- TODO: looks like this instance is not lawfull, should be removed
+instance Semigroup (AssertionDefinition a) where -- TODO: looks like this instance is not lawful, should be removed and replaced by plain function
   ParallelAssertions a <> ParallelAssertions b = ParallelAssertions (b <> a)
   ParallelAssertions a <> b@(SequentialAssertions _) = ParallelAssertions (b : a)
   SequentialAssertions a <> b@(ParallelAssertions _) = SequentialAssertions (b : a)
@@ -67,19 +67,23 @@ updateLabel _ (ParallelAssertions []) = ParallelAssertions []
 updateLabel _ (SequentialAssertions []) = SequentialAssertions []
 
 assertThat :: HasCallStack => a -> Assertion' a b -> IO ()
-assertThat given b = case b (const mempty) given of
-  SimpleAssertion assert assertionLabel -> do
-    assertionResult <- try (assert assertionLabel given)
-    case assertionResult of
-      Right () -> pure ()
-      Left (AssertionFailure failureMessage assertionLocation) -> throwIO (FluentTestFailure location [(failureMessage, assertionLocation)] 1 0)
-  assertions -> do
-    assertionResults <- flattenAssertions given assertions
-    let errors = (\assertionError -> (message assertionError, assertionSrcLoc assertionError)) <$> lefts assertionResults
-    let successes = length $ rights assertionResults
-    if null errors then pure () else throwIO (FluentTestFailure location errors (length errors) successes)
+assertThat given = assertThat' (pure given) id
+
+assertThat' :: HasCallStack => IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
+assertThat' givenIO f b = do
+  given <- f givenIO
+  case b (const mempty) given of
+    SimpleAssertion assert assertionLabel -> do
+      assertionResult <- try (assert assertionLabel given)
+      case assertionResult of
+        Right () -> pure ()
+        Left (AssertionFailure failureMessage assertionLocation) -> throwIO (FluentTestFailure location [(failureMessage, assertionLocation)] 1 0)
+    assertions -> do
+      assertionResults <- flattenAssertions given assertions
+      let errors = (\assertionError -> (message assertionError, assertionSrcLoc assertionError)) <$> lefts assertionResults
+      let successes = length $ rights assertionResults
+      if null errors then pure () else throwIO (FluentTestFailure location errors (length errors) successes)
   where
-    location :: Maybe SrcLoc
     location = case reverse (getCallStack callStack) of
       (_, loc) : _ -> Just loc
       [] -> Nothing

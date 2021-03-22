@@ -20,6 +20,8 @@
 resolver:
   url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/5.yaml
 
+pvp-bounds: lower
+
 # User packages to be built.
 # Various formats can be used as shown in the example below.
 #
@@ -37,7 +39,7 @@ packages:
 #
 extra-deps:
 - tasty-1.4.1
-- pretty-diff-0.4.0.3
+- pretty-diff-0.4.0.0
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #

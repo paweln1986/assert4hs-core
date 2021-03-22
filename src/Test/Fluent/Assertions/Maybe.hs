@@ -19,7 +19,7 @@ import Test.Fluent.Assertions
     inside,
     simpleAssertion,
   )
-import Test.Fluent.Internal.Assertions (Assertion', Assertion)
+import Test.Fluent.Internal.Assertions (Assertion, Assertion')
 
 -- | assert if subject under is empty
 --

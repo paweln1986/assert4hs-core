@@ -10,7 +10,7 @@
 -- Maintainer  : p.nosal1986@gmail.com
 -- Stability   : experimental
 --
--- This library aims to provide a set of combinators to assert Either type.
+-- This module provide a set of combinators to assert Either type.
 module Test.Fluent.Assertions.Either (isLeft, isRight, extractingRight, extractingLeft) where
 
 import qualified Data.Either as Either
@@ -24,7 +24,7 @@ import Test.Fluent.Assertions
     simpleAssertion,
   )
 
--- | assert if subject under is Left
+-- | assert if subject under test is Left
 --
 -- @
 --  assertThat (Left 10) isLeft
@@ -34,7 +34,7 @@ isLeft = inside Either.isLeft (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Left, but is Right"
 
--- | assert if subject under is Left
+-- | assert if subject under test is Right
 --
 -- @
 --  assertThat (Left 10) isRight

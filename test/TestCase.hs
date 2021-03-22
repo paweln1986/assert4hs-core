@@ -1,4 +1,4 @@
-module Test.Fluent.Tasty.TestCase (fluentTestCase) where
+module TestCase (fluentTestCase) where
 
 import Control.Exception (try)
 import Data.Data (Typeable)

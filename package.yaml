@@ -1,6 +1,6 @@
 name:                assert4hs
 version:             0.0.0.1
-github:              "githubuser/assert4hs"
+github:              "paweln1986/assert4hs"
 license:             MIT
 author:              "Pawel Nosal"
 maintainer:          "p.nosal1986@gmail.com"
@@ -11,8 +11,8 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Testing
+synopsis:            A set of assertion for writing more readable tests cases
+category:            Testing
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
@@ -21,8 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/pawe
 
 dependencies:
 - base >= 4.7 && < 5
-- tasty
-- pretty-diff
+- pretty-diff >= 0.4.0.0
 - data-default
 - text
 
@@ -43,17 +42,6 @@ ghc-options:
 library:
   source-dirs: src
 
-executables:
-  assert4hs-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - assert4hs
-
 tests:
   assert4hs-test:
     main:                Spec.hs
@@ -64,3 +52,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - assert4hs
+    - tasty

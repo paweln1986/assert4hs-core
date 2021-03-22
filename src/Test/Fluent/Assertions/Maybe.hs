@@ -14,18 +14,19 @@ module Test.Fluent.Assertions.Maybe (isNothing, isJust, extracting) where
 import qualified Data.Maybe as Maybe
 import GHC.Stack (HasCallStack)
 import Test.Fluent.Assertions
-  ( Assertion',
-    focus,
+  ( focus,
+    forceError,
     inside,
     simpleAssertion,
   )
+import Test.Fluent.Internal.Assertions (Assertion', Assertion)
 
 -- | assert if subject under is empty
 --
 -- @
 --  assertThat (Just 10) isNothing
 -- @
-isNothing :: HasCallStack => Assertion' (Maybe a) (Maybe a)
+isNothing :: HasCallStack => Assertion (Maybe a)
 isNothing = inside Maybe.isNothing (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Nothing"
@@ -35,7 +36,7 @@ isNothing = inside Maybe.isNothing (simpleAssertion (== True) assertionMessage)
 -- @
 --  assertThat (Just 10) isJust
 -- @
-isJust :: HasCallStack => Assertion' (Maybe a) (Maybe a)
+isJust :: HasCallStack => Assertion (Maybe a)
 isJust = inside Maybe.isJust (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Just"
@@ -45,6 +46,5 @@ isJust = inside Maybe.isJust (simpleAssertion (== True) assertionMessage)
 -- @
 --  assertThat (Just 10) extracting
 -- @
--- 
 extracting :: HasCallStack => Assertion' (Maybe a) a
-extracting = isJust . focus Maybe.fromJust
+extracting = forceError isJust . focus Maybe.fromJust

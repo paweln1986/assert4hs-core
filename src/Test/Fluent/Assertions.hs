@@ -56,6 +56,7 @@ module Test.Fluent.Assertions
     focus,
     inside,
     tag,
+    forceError,
 
     -- ** Assertion util functions
     assertThat,
@@ -72,13 +73,12 @@ module Test.Fluent.Assertions
 where
 
 import Data.Functor.Contravariant (Contravariant (contramap))
-
 import GHC.Stack (HasCallStack)
 import Test.Fluent.Diff (pretty)
 import Test.Fluent.Internal.Assertions
   ( Assertion,
     Assertion',
-    AssertionDefinition (Assertions),
+    AssertionDefinition (SequentialAssertions),
     FluentTestFailure (..),
     assertThat,
     basicAssertion,
@@ -99,7 +99,7 @@ simpleAssertion ::
   (a -> Bool) ->
   -- | A function that allows formatting an error message once the predicate is not met
   (a -> String) ->
-  Assertion' a a
+  Assertion a
 simpleAssertion predicate formatter f s = basicAssertion predicate formatter (f s)
 
 -- | assert if subject under test is equal to given value
@@ -120,10 +120,10 @@ simpleAssertion predicate formatter f s = basicAssertion predicate formatter (f 
 --  16
 --   ▲
 -- @
-isEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion' a a
+isEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion a
 isEqualTo a = simpleAssertion (a ==) (formatMessage True "should be equal to" a)
 
-isNotEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion' a a
+isNotEqualTo :: (Eq a, Show a, HasCallStack) => a -> Assertion a
 isNotEqualTo a = simpleAssertion (a /=) (formatMessage True "should be not equal to" a)
 
 -- | assert if the subject under test is greater than given value
@@ -137,10 +137,10 @@ isNotEqualTo a = simpleAssertion (a /=) (formatMessage True "should be not equal
 -- @
 --  given 15 should be greater than 16
 -- @
-isGreaterThan :: (Ord a, Show a, HasCallStack) => a -> Assertion' a a
+isGreaterThan :: (Ord a, Show a, HasCallStack) => a -> Assertion a
 isGreaterThan a = simpleAssertion (a <) (formatMessage False "should be greater than" a)
 
-isGreaterEqualThan :: (Ord a, Show a, HasCallStack) => a -> Assertion' a a
+isGreaterEqualThan :: (Ord a, Show a, HasCallStack) => a -> Assertion a
 isGreaterEqualThan a = simpleAssertion (a <=) (formatMessage False "should be greater or equal to" a)
 
 -- | assert if the subject under test is lower than given value
@@ -154,31 +154,31 @@ isGreaterEqualThan a = simpleAssertion (a <=) (formatMessage False "should be gr
 -- @
 --  given 16 should be lower than 15
 -- @
-isLowerThan :: (Ord a, Show a, HasCallStack) => a -> Assertion' a a
+isLowerThan :: (Ord a, Show a, HasCallStack) => a -> Assertion a
 isLowerThan a = simpleAssertion (a >) (formatMessage False "should be lower than" a)
 
-isLowerEqualThan :: (Ord a, Show a, HasCallStack) => a -> Assertion' a a
+isLowerEqualThan :: (Ord a, Show a, HasCallStack) => a -> Assertion a
 isLowerEqualThan a = simpleAssertion (a >=) (formatMessage False "should be lower or equal to" a)
 
-shouldSatisfy :: (Show a, HasCallStack) => (a -> Bool) -> Assertion' a a
+shouldSatisfy :: (Show a, HasCallStack) => (a -> Bool) -> Assertion a
 shouldSatisfy predicate = simpleAssertion predicate (formatMessage' "does not met a given predicate")
 
-hasSize :: (Foldable t, HasCallStack) => Int -> Assertion' (t a) (t a)
+hasSize :: (Foldable t, HasCallStack) => Int -> Assertion (t a)
 hasSize expectedSize = inside length (simpleAssertion (== expectedSize) assertionMessage)
   where
     assertionMessage currentSize = "expected size " <> show expectedSize <> " is not equal actual size " <> show currentSize
 
-isEmpty :: (Foldable t, HasCallStack) => Assertion' (t a) (t a)
+isEmpty :: (Foldable t, HasCallStack) => Assertion (t a)
 isEmpty = inside null (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be empty, but is not"
 
-isNotEmpty :: (Foldable t, HasCallStack) => Assertion' (t a) (t a)
+isNotEmpty :: (Foldable t, HasCallStack) => Assertion (t a)
 isNotEmpty = inside null (simpleAssertion (== False) assertionMessage)
   where
     assertionMessage _ = "should be not empty"
 
-contains :: (Foldable t, Eq a, Show a, HasCallStack) => a -> Assertion' (t a) (t a)
+contains :: (Foldable t, Eq a, Show a, HasCallStack) => a -> Assertion (t a)
 contains expectedElem = inside (elem expectedElem) (simpleAssertion (== False) assertionMessage)
   where
     assertionMessage _ = "should contain element " <> show expectedElem <> ", but it doesn't"
@@ -204,7 +204,7 @@ contains expectedElem = inside (elem expectedElem) (simpleAssertion (== False) a
 --  10
 --  ▲▲
 -- @
-focus :: (a -> b) -> Assertion a a b b
+focus :: (a -> b) -> Assertion' a b
 focus f assert s = contramap f (assert (f s))
 
 -- |  like 'focus', this function allow changing subject under test, it takes an assertion for modified value, then it allows us to continue assertion on the original value
@@ -229,8 +229,8 @@ focus f assert s = contramap f (assert (f s))
 --        [age] given 15 should be greater than 20
 --        [age] given 15 should be lower than 10
 -- @
-inside :: (b -> a) -> Assertion' a a -> Assertion' b b
-inside f assert' b s = Assertions $ b s : transformAssertions [assert' mempty (f s)] f
+inside :: (b -> a) -> Assertion a -> Assertion b
+inside f assert' b s = b s <> mconcat (transformAssertions [assert' mempty (f s)] f)
 
 -- |  this combinator allows marking following assertion with a given prefix
 --
@@ -261,8 +261,11 @@ inside f assert' b s = Assertions $ b s : transformAssertions [assert' mempty (f
 --  ╵
 --  Foo {name = "someName", age = 15}
 -- @
-tag :: String -> Assertion' a a
+tag :: String -> Assertion a
 tag label assert s = updateLabel label (assert s)
+
+forceError :: Assertion a -> Assertion a
+forceError assert' b s = SequentialAssertions [b s] <> mconcat (transformAssertions [assert' mempty s] id)
 
 formatMessage :: Show a => Bool -> String -> a -> a -> String
 formatMessage True message a a' = "given " <> show a' <> " " <> message <> " " <> show a <> "\n" <> pretty a' a

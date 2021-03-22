@@ -11,13 +11,15 @@
 -- Stability   : experimental
 --
 -- This library aims to provide a set of combinators to assert Either type.
-module Test.Fluent.Assertions.Either where
+module Test.Fluent.Assertions.Either (isLeft, isRight, extractingRight, extractingLeft) where
 
 import qualified Data.Either as Either
 import GHC.Stack (HasCallStack)
 import Test.Fluent.Assertions
-  ( Assertion',
+  ( Assertion,
+    Assertion',
     focus,
+    forceError,
     inside,
     simpleAssertion,
   )
@@ -27,7 +29,7 @@ import Test.Fluent.Assertions
 -- @
 --  assertThat (Left 10) isLeft
 -- @
-isLeft :: HasCallStack => Assertion' (Either a b) (Either a b)
+isLeft :: HasCallStack => Assertion (Either a b)
 isLeft = inside Either.isLeft (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Left, but is Right"
@@ -37,7 +39,7 @@ isLeft = inside Either.isLeft (simpleAssertion (== True) assertionMessage)
 -- @
 --  assertThat (Left 10) isRight
 -- @
-isRight :: HasCallStack => Assertion' (Either a b) (Either a b)
+isRight :: HasCallStack => Assertion (Either a b)
 isRight = inside Either.isRight (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Right, but is Left"
@@ -48,7 +50,7 @@ isRight = inside Either.isRight (simpleAssertion (== True) assertionMessage)
 --  assertThat (Left 10) extractingRight
 -- @
 extractingRight :: HasCallStack => Assertion' (Either a b) b
-extractingRight = isRight . focus (\case (Right a) -> a)
+extractingRight = forceError isRight . focus (\case (Right a) -> a)
 
 -- | assert if subject under test is Left and extract contained value
 --
@@ -56,4 +58,4 @@ extractingRight = isRight . focus (\case (Right a) -> a)
 --  assertThat (Left 10) extractingLeft
 -- @
 extractingLeft :: HasCallStack => Assertion' (Either a b) a
-extractingLeft = isLeft . focus (\case (Left a) -> a)
+extractingLeft = forceError isLeft . focus (\case (Left a) -> a)

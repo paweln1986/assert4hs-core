@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_HADDOCK hide, prune, ignore-exports #-}
 
 module Test.Fluent.Internal.Assertions where
@@ -7,6 +8,7 @@ import Data.Either (isLeft, lefts, rights)
 import Data.Functor.Contravariant (Contravariant (contramap))
 import GHC.Exception (SrcLoc, getCallStack)
 import GHC.Stack (HasCallStack, callStack)
+import System.Timeout (timeout)
 
 data FluentTestFailure = FluentTestFailure
   { srcLoc :: !(Maybe SrcLoc),
@@ -88,8 +90,8 @@ assertThat' givenIO f b = do
       (_, loc) : _ -> Just loc
       [] -> Nothing
 
-flattenAssertions :: a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
-flattenAssertions a (SimpleAssertion assert assertionLabel) = sequence [try $ assert assertionLabel a]
+flattenAssertions :: HasCallStack => a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
+flattenAssertions a (SimpleAssertion assert assertionLabel) = sequence [executeAssertion assert assertionLabel a]
 flattenAssertions a (ParallelAssertions assertions) = concat <$> traverse (flattenAssertions a) assertions
 flattenAssertions _ (SequentialAssertions []) = pure []
 flattenAssertions a (SequentialAssertions (x : xs)) = do
@@ -98,6 +100,22 @@ flattenAssertions a (SequentialAssertions (x : xs)) = do
   if isFailed
     then pure results
     else flattenAssertions a (SequentialAssertions xs)
+
+executeAssertion :: HasCallStack => (Maybe String -> t2 -> IO ()) -> Maybe String -> t2 -> IO (Either AssertionFailure ())
+executeAssertion assert assertionLabel given = do
+  result <- timeout 10000 $ do
+    !assertionResult <- try $ assert assertionLabel given
+    return assertionResult
+  case result of
+    Nothing -> 
+      pure (Left $ AssertionFailure (maybe "" (\x -> "[" <> x <> "] ") assertionLabel <> timeoutMessage) location)
+    Just a -> pure a
+  where
+    timeoutMessage = "Timeoute occured, probably some infinitive data structure or not terminating predicate has been use"
+    location :: Maybe SrcLoc
+    location = case reverse (getCallStack callStack) of
+      (_, loc) : _ -> Just loc
+      [] -> Nothing
 
 transformAssertions :: [AssertionDefinition a] -> (b -> a) -> [AssertionDefinition b]
 transformAssertions ((SimpleAssertion assert assertionLabel) : xs) f = SimpleAssertion (\l b -> assert (orElse l assertionLabel) (f b)) assertionLabel : transformAssertions xs f

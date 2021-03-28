@@ -68,11 +68,30 @@ updateLabel assertionLabel (SequentialAssertions (x : xs)) = SequentialAssertion
 updateLabel _ (ParallelAssertions []) = ParallelAssertions []
 updateLabel _ (SequentialAssertions []) = SequentialAssertions []
 
-assertThat :: HasCallStack => a -> Assertion' a b -> IO ()
-assertThat given = assertThat' (pure given) id
+newtype AssertionConfig = AssertionConfig
+  { assertionTimeout :: Int
+  }
+  deriving (Show)
 
-assertThat' :: HasCallStack => IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
-assertThat' givenIO f b = do
+defaultConfig :: AssertionConfig
+defaultConfig =
+  AssertionConfig
+    10000000 -- 10 seconds
+
+assertThat :: HasCallStack => a -> Assertion' a b -> IO ()
+assertThat given = assertThatIO (pure given) id
+
+assertThatIO :: HasCallStack => IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
+assertThatIO = assertThatIO'' defaultConfig
+
+assertThat' :: HasCallStack => AssertionConfig -> a -> Assertion' a b -> IO ()
+assertThat' config given = assertThatIO' config (pure given)
+
+assertThatIO' :: HasCallStack => AssertionConfig -> IO a -> Assertion' a c -> IO ()
+assertThatIO' config givenIO = assertThatIO'' config givenIO id
+
+assertThatIO'' :: HasCallStack => AssertionConfig -> IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
+assertThatIO'' config givenIO f b = do
   given <- f givenIO
   case b (const mempty) given of
     SimpleAssertion assert assertionLabel -> do
@@ -81,7 +100,7 @@ assertThat' givenIO f b = do
         Right () -> pure ()
         Left (AssertionFailure failureMessage assertionLocation) -> throwIO (FluentTestFailure location [(failureMessage, assertionLocation)] 1 0)
     assertions -> do
-      assertionResults <- flattenAssertions given assertions
+      assertionResults <- flattenAssertions config given assertions
       let errors = (\assertionError -> (message assertionError, assertionSrcLoc assertionError)) <$> lefts assertionResults
       let successes = length $ rights assertionResults
       if null errors then pure () else throwIO (FluentTestFailure location errors (length errors) successes)
@@ -90,28 +109,31 @@ assertThat' givenIO f b = do
       (_, loc) : _ -> Just loc
       [] -> Nothing
 
-flattenAssertions :: HasCallStack => a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
-flattenAssertions a (SimpleAssertion assert assertionLabel) = sequence [executeAssertion assert assertionLabel a]
-flattenAssertions a (ParallelAssertions assertions) = concat <$> traverse (flattenAssertions a) assertions
-flattenAssertions _ (SequentialAssertions []) = pure []
-flattenAssertions a (SequentialAssertions (x : xs)) = do
-  results <- flattenAssertions a x
+flattenAssertions :: HasCallStack => AssertionConfig -> a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
+flattenAssertions config a (SimpleAssertion assert assertionLabel) = sequence [executeAssertion config assert assertionLabel a]
+flattenAssertions config a (ParallelAssertions assertions) = concat <$> traverse (flattenAssertions config a) assertions
+flattenAssertions _ _ (SequentialAssertions []) = pure []
+flattenAssertions config a (SequentialAssertions (x : xs)) = do
+  results <- flattenAssertions config a x
   let isFailed = any isLeft results
   if isFailed
     then pure results
-    else flattenAssertions a (SequentialAssertions xs)
+    else flattenAssertions config a (SequentialAssertions xs)
 
-executeAssertion :: HasCallStack => (Maybe String -> t2 -> IO ()) -> Maybe String -> t2 -> IO (Either AssertionFailure ())
-executeAssertion assert assertionLabel given = do
-  result <- timeout 10000 $ do
+executeAssertion :: HasCallStack => AssertionConfig -> (Maybe String -> t2 -> IO ()) -> Maybe String -> t2 -> IO (Either AssertionFailure ())
+executeAssertion config assert assertionLabel given = do
+  result <- withTimeout $ do
     !assertionResult <- try $ assert assertionLabel given
     return assertionResult
   case result of
-    Nothing -> 
+    Nothing ->
       pure (Left $ AssertionFailure (maybe "" (\x -> "[" <> x <> "] ") assertionLabel <> timeoutMessage) location)
     Just a -> pure a
   where
-    timeoutMessage = "Timeoute occured, probably some infinitive data structure or not terminating predicate has been use"
+    withTimeout = timeout $ assertionTimeout config
+    timeoutMessage = "Timeout occurred, probably some infinitive data structure or not terminating predicate has been used. Timeout: " <> show timeoutInSeconds <> "s"
+    timeoutInSeconds :: Double
+    timeoutInSeconds = fromIntegral (assertionTimeout config) / 1000000.0
     location :: Maybe SrcLoc
     location = case reverse (getCallStack callStack) of
       (_, loc) : _ -> Just loc

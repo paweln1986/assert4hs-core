@@ -60,6 +60,9 @@ module Test.Fluent.Assertions
 
     -- ** Assertion util functions
     assertThat,
+    assertThatIO,
+    assertThat',
+    assertThatIO',
 
     -- * Types
 
@@ -81,6 +84,9 @@ import Test.Fluent.Internal.Assertions
     AssertionDefinition (SequentialAssertions),
     FluentTestFailure (..),
     assertThat,
+    assertThat',
+    assertThatIO,
+    assertThatIO',
     basicAssertion,
     transformAssertions,
     updateLabel,

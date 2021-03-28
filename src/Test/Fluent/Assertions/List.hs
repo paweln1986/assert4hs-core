@@ -1,6 +1,6 @@
 module Test.Fluent.Assertions.List where
 
-import Test.Fluent.Assertions
+import Test.Fluent.Assertions ( Assertion, simpleAssertion )
 
 haveSameSizeAs :: [a] -> Assertion [a]
 haveSameSizeAs expected = simpleAssertion (\c -> length c == length expected) (\x -> "sadfasfd")

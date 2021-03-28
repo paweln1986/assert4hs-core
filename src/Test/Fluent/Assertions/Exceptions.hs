@@ -41,7 +41,7 @@ import Test.Fluent.Assertions (simpleAssertion)
 import Test.Fluent.Internal.Assertions
   ( Assertion',
     FluentTestFailure (FluentTestFailure),
-    assertThat',
+    assertThatIO,
   )
 
 type ExceptionSelector a = a -> a
@@ -72,7 +72,7 @@ assertThrowing' :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e ->
 assertThrowing' givenIO selector = assertThrowing givenIO selector (simpleAssertion (const True) (const "should not be invoked"))
 
 assertThrowing :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e -> Assertion' e b -> IO ()
-assertThrowing givenIO predicate = assertThat' givenIO $ \io -> do
+assertThrowing givenIO predicate = assertThatIO givenIO $ \io -> do
   res <- try io
   case res of
     Left e -> do

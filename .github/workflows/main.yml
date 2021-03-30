@@ -49,15 +49,15 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd route-monitor
+        cd assert4hs
         stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
 
     - name: Build
       run: |
-        cd route-monitor
+        cd assert4hs
         stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
       run: |
-        cd route-monitor
+        cd assert4hs
         stack build --system-ghc

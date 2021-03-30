@@ -9,6 +9,10 @@ import Data.Functor.Contravariant (Contravariant (contramap))
 import GHC.Exception (SrcLoc, getCallStack)
 import GHC.Stack (HasCallStack, callStack)
 import System.Timeout (timeout)
+import Test.Fluent.Internal.AssertionConfig
+  ( AssertionConfig (assertionTimeout),
+    defaultConfig,
+  )
 
 data FluentTestFailure = FluentTestFailure
   { srcLoc :: !(Maybe SrcLoc),
@@ -68,25 +72,19 @@ updateLabel assertionLabel (SequentialAssertions (x : xs)) = SequentialAssertion
 updateLabel _ (ParallelAssertions []) = ParallelAssertions []
 updateLabel _ (SequentialAssertions []) = SequentialAssertions []
 
-newtype AssertionConfig = AssertionConfig
-  { assertionTimeout :: Int
-  }
-  deriving (Show)
-
-defaultConfig :: AssertionConfig
-defaultConfig =
-  AssertionConfig
-    10000000 -- 10 seconds
-
+-- | Execute assertions against given subject under test.
 assertThat :: HasCallStack => a -> Assertion' a b -> IO ()
-assertThat given = assertThatIO (pure given) id
+assertThat given = assertThatIO (pure given)
 
-assertThatIO :: HasCallStack => IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
-assertThatIO = assertThatIO'' defaultConfig
+-- | Execute assertions against given subject under test extracted from IO action.
+assertThatIO :: HasCallStack => IO a -> Assertion' a b -> IO ()
+assertThatIO given = assertThatIO'' defaultConfig given id
 
+-- | A variant of `assertThat` which allow to pass additional configuration.
 assertThat' :: HasCallStack => AssertionConfig -> a -> Assertion' a b -> IO ()
 assertThat' config given = assertThatIO' config (pure given)
 
+-- | A variant of `assertThatIO` which allow to pass additional configuration.
 assertThatIO' :: HasCallStack => AssertionConfig -> IO a -> Assertion' a c -> IO ()
 assertThatIO' config givenIO = assertThatIO'' config givenIO id
 

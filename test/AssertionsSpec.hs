@@ -28,12 +28,15 @@ import Test.Fluent.Assertions
     isNotEmpty,
     isNotEqualTo,
     shouldSatisfy,
+    defaultConfig, 
+    setAssertionTimeout
   )
 import Test.Fluent.Internal.Assertions
   ( FluentTestFailure (FluentTestFailure, msg, srcLoc),
-    assertThat,
+    assertThat, assertThat',
   )
 import Test.Hspec (Spec, describe, hspec, it, shouldBe)
+import Data.Function
 
 main :: IO ()
 main = hspec spec
@@ -178,6 +181,19 @@ spec = do
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
         `shouldBe` [ ( "should contain element 10, but it doesn't",
+                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
+                     )
+                   ]
+    it "report timeout" $ do
+      let config = defaultConfig & setAssertionTimeout 1000000
+      ((startLine, endLine), res) <- testLocation 0 $ assertThat' config [0..] $ isEqualTo [0..]
+      isRight res `shouldBe` False
+      let (FluentTestFailure assertThatLoc messages erros success) = fromLeft undefined res
+      erros `shouldBe` 1
+      success `shouldBe` 0
+      assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
+      messages
+        `shouldBe` [ ( "Timeout occurred, probably some infinitive data structure or not terminating predicate has been used. Timeout: 1.0s",
                        Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
                      )
                    ]

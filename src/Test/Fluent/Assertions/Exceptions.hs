@@ -9,11 +9,13 @@
 -- Maintainer  : p.nosal1986@gmail.com
 -- Stability   : experimental
 --
--- This mudule provide an assertion for check if expected Exception has been throw by IO action.
+-- This module provide an assertion for check if expected Exception has been throw by IO action.
 module Test.Fluent.Assertions.Exceptions
   ( -- ** Assertion util functions
     assertThrowing,
     assertThrowing',
+    assertThrows',
+    assertThrows,
 
     -- ** Exception selectors
     anyException,
@@ -37,11 +39,11 @@ import GHC.Exception
   ( getCallStack,
   )
 import GHC.Stack (HasCallStack, callStack)
-import Test.Fluent.Assertions (simpleAssertion)
+import Test.Fluent.Assertions (AssertionConfig, defaultConfig, simpleAssertion)
 import Test.Fluent.Internal.Assertions
   ( Assertion',
     FluentTestFailure (FluentTestFailure),
-    assertThat',
+    assertThatIO'',
   )
 
 type ExceptionSelector a = a -> a
@@ -68,11 +70,17 @@ anyIOException = id
 exceptionOfType :: Exception e => ExceptionSelector e
 exceptionOfType = id
 
-assertThrowing' :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e -> IO ()
-assertThrowing' givenIO selector = assertThrowing givenIO selector (simpleAssertion (const True) (const "should not be invoked"))
+assertThrows :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e -> IO ()
+assertThrows givenIO selector = assertThrowing' defaultConfig givenIO selector (simpleAssertion (const True) (const "should not be invoked"))
+
+assertThrows' :: (HasCallStack, Exception e) => AssertionConfig -> IO a -> ExceptionSelector e -> IO ()
+assertThrows' config givenIO selector = assertThrowing' config givenIO selector (simpleAssertion (const True) (const "should not be invoked"))
 
 assertThrowing :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e -> Assertion' e b -> IO ()
-assertThrowing givenIO predicate = assertThat' givenIO $ \io -> do
+assertThrowing = assertThrowing' defaultConfig
+
+assertThrowing' :: (HasCallStack, Exception e) => AssertionConfig -> IO a -> ExceptionSelector e -> Assertion' e b -> IO ()
+assertThrowing' config givenIO predicate = assertThatIO'' config givenIO $ \io -> do
   res <- try io
   case res of
     Left e -> do

@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_HADDOCK hide, prune, ignore-exports #-}
 
 module Test.Fluent.Internal.Assertions where
@@ -7,6 +8,11 @@ import Data.Either (isLeft, lefts, rights)
 import Data.Functor.Contravariant (Contravariant (contramap))
 import GHC.Exception (SrcLoc, getCallStack)
 import GHC.Stack (HasCallStack, callStack)
+import System.Timeout (timeout)
+import Test.Fluent.Internal.AssertionConfig
+  ( AssertionConfig (assertionTimeout),
+    defaultConfig,
+  )
 
 data FluentTestFailure = FluentTestFailure
   { srcLoc :: !(Maybe SrcLoc),
@@ -66,11 +72,24 @@ updateLabel assertionLabel (SequentialAssertions (x : xs)) = SequentialAssertion
 updateLabel _ (ParallelAssertions []) = ParallelAssertions []
 updateLabel _ (SequentialAssertions []) = SequentialAssertions []
 
+-- | Execute assertions against given subject under test.
 assertThat :: HasCallStack => a -> Assertion' a b -> IO ()
-assertThat given = assertThat' (pure given) id
+assertThat given = assertThatIO (pure given)
 
-assertThat' :: HasCallStack => IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
-assertThat' givenIO f b = do
+-- | Execute assertions against given subject under test extracted from IO action.
+assertThatIO :: HasCallStack => IO a -> Assertion' a b -> IO ()
+assertThatIO given = assertThatIO'' defaultConfig given id
+
+-- | A variant of `assertThat` which allow to pass additional configuration.
+assertThat' :: HasCallStack => AssertionConfig -> a -> Assertion' a b -> IO ()
+assertThat' config given = assertThatIO' config (pure given)
+
+-- | A variant of `assertThatIO` which allow to pass additional configuration.
+assertThatIO' :: HasCallStack => AssertionConfig -> IO a -> Assertion' a c -> IO ()
+assertThatIO' config givenIO = assertThatIO'' config givenIO id
+
+assertThatIO'' :: HasCallStack => AssertionConfig -> IO a -> (IO a -> IO b) -> Assertion' b c -> IO ()
+assertThatIO'' config givenIO f b = do
   given <- f givenIO
   case b (const mempty) given of
     SimpleAssertion assert assertionLabel -> do
@@ -79,7 +98,7 @@ assertThat' givenIO f b = do
         Right () -> pure ()
         Left (AssertionFailure failureMessage assertionLocation) -> throwIO (FluentTestFailure location [(failureMessage, assertionLocation)] 1 0)
     assertions -> do
-      assertionResults <- flattenAssertions given assertions
+      assertionResults <- flattenAssertions config given assertions
       let errors = (\assertionError -> (message assertionError, assertionSrcLoc assertionError)) <$> lefts assertionResults
       let successes = length $ rights assertionResults
       if null errors then pure () else throwIO (FluentTestFailure location errors (length errors) successes)
@@ -88,16 +107,35 @@ assertThat' givenIO f b = do
       (_, loc) : _ -> Just loc
       [] -> Nothing
 
-flattenAssertions :: a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
-flattenAssertions a (SimpleAssertion assert assertionLabel) = sequence [try $ assert assertionLabel a]
-flattenAssertions a (ParallelAssertions assertions) = concat <$> traverse (flattenAssertions a) assertions
-flattenAssertions _ (SequentialAssertions []) = pure []
-flattenAssertions a (SequentialAssertions (x : xs)) = do
-  results <- flattenAssertions a x
+flattenAssertions :: HasCallStack => AssertionConfig -> a -> AssertionDefinition a -> IO [Either AssertionFailure ()]
+flattenAssertions config a (SimpleAssertion assert assertionLabel) = sequence [executeAssertion config assert assertionLabel a]
+flattenAssertions config a (ParallelAssertions assertions) = concat <$> traverse (flattenAssertions config a) assertions
+flattenAssertions _ _ (SequentialAssertions []) = pure []
+flattenAssertions config a (SequentialAssertions (x : xs)) = do
+  results <- flattenAssertions config a x
   let isFailed = any isLeft results
   if isFailed
     then pure results
-    else flattenAssertions a (SequentialAssertions xs)
+    else flattenAssertions config a (SequentialAssertions xs)
+
+executeAssertion :: HasCallStack => AssertionConfig -> (Maybe String -> t2 -> IO ()) -> Maybe String -> t2 -> IO (Either AssertionFailure ())
+executeAssertion config assert assertionLabel given = do
+  result <- withTimeout $ do
+    !assertionResult <- try $ assert assertionLabel given
+    return assertionResult
+  case result of
+    Nothing ->
+      pure (Left $ AssertionFailure (maybe "" (\x -> "[" <> x <> "] ") assertionLabel <> timeoutMessage) location)
+    Just a -> pure a
+  where
+    withTimeout = timeout $ assertionTimeout config
+    timeoutMessage = "Timeout occurred, probably some infinitive data structure or not terminating predicate has been used. Timeout: " <> show timeoutInSeconds <> "s"
+    timeoutInSeconds :: Double
+    timeoutInSeconds = fromIntegral (assertionTimeout config) / 1000000.0
+    location :: Maybe SrcLoc
+    location = case reverse (getCallStack callStack) of
+      (_, loc) : _ -> Just loc
+      [] -> Nothing
 
 transformAssertions :: [AssertionDefinition a] -> (b -> a) -> [AssertionDefinition b]
 transformAssertions ((SimpleAssertion assert assertionLabel) : xs) f = SimpleAssertion (\l b -> assert (orElse l assertionLabel) (f b)) assertionLabel : transformAssertions xs f

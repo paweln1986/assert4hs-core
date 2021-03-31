@@ -60,6 +60,14 @@ module Test.Fluent.Assertions
 
     -- ** Assertion util functions
     assertThat,
+    assertThatIO,
+    assertThat',
+    assertThatIO',
+    
+    -- ** Assertion configuration
+    AssertionConfig,
+    defaultConfig,
+    setAssertionTimeout,
 
     -- * Types
 
@@ -75,16 +83,12 @@ where
 import Data.Functor.Contravariant (Contravariant (contramap))
 import GHC.Stack (HasCallStack)
 import Test.Fluent.Diff (pretty)
-import Test.Fluent.Internal.Assertions
-  ( Assertion,
-    Assertion',
-    AssertionDefinition (SequentialAssertions),
-    FluentTestFailure (..),
-    assertThat,
-    basicAssertion,
-    transformAssertions,
-    updateLabel,
+import Test.Fluent.Internal.AssertionConfig
+  ( AssertionConfig,
+    defaultConfig,
+    setAssertionTimeout,
   )
+import Test.Fluent.Internal.Assertions (Assertion, Assertion', AssertionDefinition (SequentialAssertions), FluentTestFailure (..), assertThat, assertThat', assertThatIO, assertThatIO', basicAssertion, transformAssertions, updateLabel)
 
 -- | The 'simpleAssertion' function is a building block of more complicated assertions.
 --
@@ -264,6 +268,14 @@ inside f assert' b s = b s <> mconcat (transformAssertions [assert' mempty (f s)
 tag :: String -> Assertion a
 tag label assert s = updateLabel label (assert s)
 
+-- |  Sometimes it is handy to stop the assertions chain. 
+--
+--    This combinator gets an assertion that should be forced, any following assertion will be not executed then
+--
+-- @
+-- extracting :: HasCallStack => Assertion' (Maybe a) a
+-- extracting = forceError isJust . focus Maybe.fromJust
+-- @
 forceError :: Assertion a -> Assertion a
 forceError assert' b s = SequentialAssertions [b s] <> mconcat (transformAssertions [assert' mempty s] id)
 

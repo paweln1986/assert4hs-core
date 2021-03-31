@@ -52,4 +52,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - assert4hs
-    - tasty
+    - hspec
+    - hspec-discover

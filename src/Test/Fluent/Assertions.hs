@@ -179,7 +179,7 @@ isNotEmpty = inside null (simpleAssertion (== False) assertionMessage)
     assertionMessage _ = "should be not empty"
 
 contains :: (Foldable t, Eq a, Show a, HasCallStack) => a -> Assertion (t a)
-contains expectedElem = inside (elem expectedElem) (simpleAssertion (== False) assertionMessage)
+contains expectedElem = inside (elem expectedElem) (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should contain element " <> show expectedElem <> ", but it doesn't"
 

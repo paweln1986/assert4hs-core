@@ -59,4 +59,4 @@ jobs:
     - name: Test
       run: |
         
-        stack build --system-ghc
+        stack test --system-ghc

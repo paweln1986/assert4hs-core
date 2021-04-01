@@ -1,23 +1,20 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 
 module AssertionsSpec where
 
-import Control.Exception (try)
-import Data.Bifunctor (Bifunctor (first, second))
+import AssertionSpecUtils (testLocation)
 import Data.Either (fromLeft, isRight)
+import Data.Function ((&))
 import Data.Maybe ()
 import GHC.Stack
-  ( HasCallStack,
-    SrcLoc
-      ( SrcLoc,
-        srcLocEndLine,
-        srcLocStartLine
+  ( SrcLoc
+      ( SrcLoc
       ),
-    callStack,
-    getCallStack,
   )
 import Test.Fluent.Assertions
   ( contains,
+    defaultConfig,
     hasSize,
     isEmpty,
     isEqualTo,
@@ -27,22 +24,39 @@ import Test.Fluent.Assertions
     isLowerThan,
     isNotEmpty,
     isNotEqualTo,
+    setAssertionTimeout,
     shouldSatisfy,
-    defaultConfig, 
-    setAssertionTimeout
   )
 import Test.Fluent.Internal.Assertions
-  ( FluentTestFailure (FluentTestFailure, msg, srcLoc),
-    assertThat, assertThat',
+  ( FluentTestFailure (FluentTestFailure),
+    assertThat,
+    assertThat',
   )
 import Test.Hspec (Spec, describe, hspec, it, shouldBe)
-import Data.Function
 
 main :: IO ()
 main = hspec spec
 
 spec :: Spec
 spec = do
+  describe "chaining assertions" $ do
+    it "should accumulate errors" $ do
+      ((startLine, endLine), res) <-
+        testLocation 1 $
+          assertThat "someString" $
+            isLowerThan "someString"
+              . isNotEqualTo "someString"
+              . isGreaterThan "someString"
+      isRight res `shouldBe` False
+      let (FluentTestFailure assertThatLoc messages erros success) = fromLeft undefined res
+      erros `shouldBe` 3
+      success `shouldBe` 0
+      assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
+      messages
+        `shouldBe` [ ("given \"someString\" should be lower than \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 1) 0 (endLine + 1) 0)),
+                     ("given \"someString\" should be not equal to \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 2) 0 (endLine + 2) 0)),
+                     ("given \"someString\" should be greater than \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 3) 0 (endLine + 3) 0))
+                   ]
   describe "failing assertions" $ do
     it "isEqualTo should report correct message" $ do
       ((startLine, endLine), res) <-
@@ -186,7 +200,7 @@ spec = do
                    ]
     it "report timeout" $ do
       let config = defaultConfig & setAssertionTimeout 1000000
-      ((startLine, endLine), res) <- testLocation 0 $ assertThat' config [0..] $ isEqualTo [0..]
+      ((startLine, endLine), res) <- testLocation 0 $ assertThat' config [0 ..] $ isEqualTo [0 ..]
       isRight res `shouldBe` False
       let (FluentTestFailure assertThatLoc messages erros success) = fromLeft undefined res
       erros `shouldBe` 1
@@ -237,14 +251,3 @@ spec = do
     it "contains should report correct message" $ do
       (_, res) <- testLocation 0 $ assertThat (Just 10) $ contains 10
       isRight res `shouldBe` True
-
-testLocation :: HasCallStack => Int -> IO () -> IO ((Int, Int), Either FluentTestFailure ())
-testLocation offsetLine assertionToTest = do
-  res <- try assertionToTest
-  let res1 = first (\f -> f {srcLoc = aaa (srcLoc f), msg = bbb (msg f)}) res
-  pure ((srcLocStartLine loc + offsetLine, srcLocEndLine loc + offsetLine), res1)
-  where
-    loc = snd $ head $ getCallStack callStack
-    aaa (Just (SrcLoc a b c lineStart _ lineEnd _)) = Just (SrcLoc a b c lineStart 0 lineEnd 0)
-    aaa Nothing = Nothing
-    bbb x = fmap (second aaa) x

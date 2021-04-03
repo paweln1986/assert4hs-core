@@ -1,6 +1,6 @@
 .stack-work/
 *~
-assert4hs.cabal
+assert4hs-core.cabal
 hie-logs.log
 stack.yaml.lock
 dist
@@ -26,4 +26,3 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
->>>>>>> af6fb2e (Initial commit)

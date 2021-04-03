@@ -1,13 +1,7 @@
 cradle:
   stack:
     - path: "./src"
-      component: "assert4hs:lib"
-
-    - path: "./app/Main.hs"
-      component: "assert4hs:exe:assert4hs-exe"
-
-    - path: "./app/Paths_assert4hs.hs"
-      component: "assert4hs:exe:assert4hs-exe"
+      component: "assert4hs-core:lib"
 
     - path: "./test"
-      component: "assert4hs:test:assert4hs-test"
+      component: "assert4hs-core:test:assert4hs-core-test"

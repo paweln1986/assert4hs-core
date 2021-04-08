@@ -1,11 +1,11 @@
 name:                assert4hs-core
 version:             0.1.0
 github:              "paweln1986/assert4hs-core"
-license:             MIT
+license:             "MIT"
 author:              "Pawel Nosal"
 maintainer:          "p.nosal1986@gmail.com"
 copyright:           "2021 Pawel Nosal"
-
+license-file:        "LICENSE.md"
 extra-source-files:
 - README.md
 - ChangeLog.md

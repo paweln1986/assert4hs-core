@@ -146,4 +146,6 @@ assertThat (Foo "someName" 76) isSuitableForEmployment
 
 #### Related projects
 
-[assert4hs-tasty](https://github.com/paweln1986/assert4hs-tasty) - assert4hs provider for tasty
+[assert4hs-hspec](https://github.com/paweln1986/assert4hs-hspec) - integration point of assert4hs and [hspec](https://hackage.haskell.org/package/hspec)
+
+[assert4hs-tasty](https://github.com/paweln1986/assert4hs-tasty) - integration point of assert4hs and [tasty](https://hackage.haskell.org/package/tasty)

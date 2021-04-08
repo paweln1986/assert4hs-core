@@ -1,6 +1,6 @@
-name:                assert4hs
-version:             0.0.0.1
-github:              "paweln1986/assert4hs"
+name:                assert4hs-core
+version:             0.1.0
+github:              "paweln1986/assert4hs-core"
 license:             MIT
 author:              "Pawel Nosal"
 maintainer:          "p.nosal1986@gmail.com"
@@ -43,7 +43,7 @@ library:
   source-dirs: src
 
 tests:
-  assert4hs-test:
+  assert4hs-core-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -51,6 +51,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - assert4hs
+    - assert4hs-core
     - hspec
     - hspec-discover

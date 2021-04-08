@@ -3,7 +3,7 @@
 
 module AssertionsSpec where
 
-import AssertionSpecUtils (testLocation)
+import AssertionSpecUtils (assertionMessage, testLocation)
 import Data.Either (fromLeft, isRight)
 import Data.Function ((&))
 import Data.Maybe ()
@@ -53,9 +53,9 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ("given \"someString\" should be lower than \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 1) 0 (endLine + 1) 0)),
-                     ("given \"someString\" should be not equal to \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 2) 0 (endLine + 2) 0)),
-                     ("given \"someString\" should be greater than \"someString\"", Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 3) 0 (endLine + 3) 0))
+        `shouldBe` [ assertionMessage "given \"someString\" should be lower than \"someString\"" (startLine + 1) (endLine + 1),
+                     assertionMessage "given \"someString\" should be not equal to \"someString\"" (startLine + 2) (endLine + 2),
+                     assertionMessage "given \"someString\" should be greater than \"someString\"" (startLine + 3) (endLine + 3)
                    ]
   describe "failing assertions" $ do
     it "isEqualTo should report correct message" $ do
@@ -69,10 +69,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given \"someString\" should be equal to \"otherString\"\n \9660 \9660\n\"someString\"\n\9591\n\9474\n\9589\n\"otherString\"\n  \9650\9650 \9650\n",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 1) 0 (endLine + 1) 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "given \"someString\" should be equal to \"otherString\"\n \9660 \9660\n\"someString\"\n\9591\n\9474\n\9589\n\"otherString\"\n  \9650\9650 \9650\n" (startLine + 1) (endLine + 1)]
     it "isNotEqualTo should report correct message" $ do
       ((startLine, endLine), res) <-
         testLocation 1 $
@@ -84,10 +81,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given \"someString\" should be not equal to \"someString\"",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" (startLine + 1) 0 (endLine + 1) 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "given \"someString\" should be not equal to \"someString\"" (startLine + 1) (endLine + 1)]
     it "isGreaterThan should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat 5 $ isGreaterThan 6
       isRight res `shouldBe` False
@@ -96,11 +90,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given 5 should be greater than 6",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
-
+        `shouldBe` [assertionMessage "given 5 should be greater than 6" startLine endLine]
     it "isGreaterEqualThan should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat 5 $ isGreaterEqualThan 6
       isRight res `shouldBe` False
@@ -109,11 +99,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given 5 should be greater or equal to 6",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
-
+        `shouldBe` [assertionMessage "given 5 should be greater or equal to 6" startLine endLine]
     it "isLowerThan should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat 5 $ isLowerThan 4
       isRight res `shouldBe` False
@@ -122,10 +108,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given 5 should be lower than 4",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "given 5 should be lower than 4" startLine endLine]
     it "isLowerEqualThan should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat 5 $ isLowerEqualThan 4
       isRight res `shouldBe` False
@@ -134,10 +117,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given 5 should be lower or equal to 4",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "given 5 should be lower or equal to 4" startLine endLine]
     it "shouldSatisfy should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat 5 $ shouldSatisfy (< 5)
       isRight res `shouldBe` False
@@ -146,10 +126,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "given 5 does not met a predicate",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "given 5 does not met a predicate" startLine endLine]
     it "hasSize should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat [1 .. 7] $ hasSize 5
       isRight res `shouldBe` False
@@ -158,10 +135,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "expected size 5 is not equal actual size 7",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "expected size 5 is not equal actual size 7" startLine endLine]
     it "isEmpty should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat (Just 1) $ isEmpty
       isRight res `shouldBe` False
@@ -170,10 +144,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "should be empty, but is not",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "should be empty, but is not" startLine endLine]
     it "isNotEmpty should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat Nothing $ isNotEmpty
       isRight res `shouldBe` False
@@ -182,10 +153,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "should be not empty",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "should be not empty" startLine endLine]
     it "contains should report correct message" $ do
       ((startLine, endLine), res) <- testLocation 0 $ assertThat (Just 1) $ contains 10
       isRight res `shouldBe` False
@@ -194,12 +162,9 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "should contain element 10, but it doesn't",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "should contain element 10, but it doesn't" startLine endLine]
     it "report timeout" $ do
-      let config = defaultConfig & setAssertionTimeout 1000000
+      let config = defaultConfig & setAssertionTimeout 100000
       ((startLine, endLine), res) <- testLocation 0 $ assertThat' config [0 ..] $ isEqualTo [0 ..]
       isRight res `shouldBe` False
       let (FluentTestFailure assertThatLoc messages erros success) = fromLeft undefined res
@@ -207,10 +172,7 @@ spec = do
       success `shouldBe` 0
       assertThatLoc `shouldBe` Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
       messages
-        `shouldBe` [ ( "Timeout occurred, probably some infinitive data structure or not terminating predicate has been used. Timeout: 1.0s",
-                       Just (SrcLoc "main" "AssertionsSpec" "test/AssertionsSpec.hs" startLine 0 endLine 0)
-                     )
-                   ]
+        `shouldBe` [assertionMessage "Timeout occurred, probably some infinitive data structure or not terminating predicate has been used. Timeout: 0.1s" startLine endLine]
   describe "success assertions" $ do
     it "isEqualTo should report correct message" $ do
       (_, res) <-

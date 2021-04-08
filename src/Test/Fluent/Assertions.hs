@@ -63,7 +63,7 @@ module Test.Fluent.Assertions
     assertThatIO,
     assertThat',
     assertThatIO',
-    
+
     -- ** Assertion configuration
     AssertionConfig,
     defaultConfig,
@@ -268,7 +268,7 @@ inside f assert' b s = b s <> mconcat (transformAssertions [assert' mempty (f s)
 tag :: String -> Assertion a
 tag label assert s = updateLabel label (assert s)
 
--- |  Sometimes it is handy to stop the assertions chain. 
+-- |  Sometimes it is handy to stop the assertions chain.
 --
 --    This combinator gets an assertion that should be forced, any following assertion will be not executed then
 --

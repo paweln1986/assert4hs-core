@@ -6,7 +6,9 @@ import AssertionSpecUtils (assertionMessage, testLocation)
 import Data.Either (fromLeft, isLeft, isRight)
 import Test.Fluent.Assertions
   ( FluentTestFailure (FluentTestFailure),
-    assertThat,
+  )
+import Test.Fluent.Assertions.Core
+  ( assertThat,
   )
 import Test.Fluent.Assertions.List
   ( shouldHaveSameElements,

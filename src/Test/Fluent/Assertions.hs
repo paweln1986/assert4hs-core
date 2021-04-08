@@ -58,12 +58,6 @@ module Test.Fluent.Assertions
     tag,
     forceError,
 
-    -- ** Assertion util functions
-    assertThat,
-    assertThatIO,
-    assertThat',
-    assertThatIO',
-
     -- ** Assertion configuration
     AssertionConfig,
     defaultConfig,
@@ -88,7 +82,7 @@ import Test.Fluent.Internal.AssertionConfig
     defaultConfig,
     setAssertionTimeout,
   )
-import Test.Fluent.Internal.Assertions (Assertion, Assertion', AssertionDefinition (SequentialAssertions), FluentTestFailure (..), assertThat, assertThat', assertThatIO, assertThatIO', basicAssertion, transformAssertions, updateLabel)
+import Test.Fluent.Internal.Assertions (Assertion, Assertion', AssertionDefinition (SequentialAssertions), FluentTestFailure (..), basicAssertion, transformAssertions, updateLabel)
 
 -- | The 'simpleAssertion' function is a building block of more complicated assertions.
 --

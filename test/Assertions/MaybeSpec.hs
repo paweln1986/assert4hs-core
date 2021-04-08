@@ -6,8 +6,10 @@ import AssertionSpecUtils (assertionMessage, testLocation)
 import Data.Either (fromLeft, isRight)
 import Test.Fluent.Assertions
   ( FluentTestFailure (FluentTestFailure),
-    assertThat,
     isEqualTo,
+  )
+import Test.Fluent.Assertions.Core
+  ( assertThat,
   )
 import Test.Fluent.Assertions.Maybe (extracting, isJust, isNothing)
 import Test.Hspec (SpecWith, describe, hspec, it, shouldBe)

@@ -16,7 +16,7 @@ import GHC.Stack (HasCallStack)
 import Test.Fluent.Assertions (Assertion, forceError, simpleAssertion)
 import Test.Fluent.Diff (pretty)
 
--- | assert if given list has same length as expected list
+-- | assert if a given list has the same length as the expected list
 --
 -- @
 --  assertThat [1..10] $ shouldHaveSameSizeAs [0..10]
@@ -31,7 +31,7 @@ shouldHaveSameSizeAs expected = simpleAssertion predicate message
         <> " is not equal to expected "
         <> show (length expected)
 
--- | verify if the given list has a length lower or equal to expected value
+-- | verify if the given list has a length lower or equal to an expected value
 --
 -- @
 --  assertThat [1..10] $ shouldHaveSizeLowerOrEqual 10
@@ -46,7 +46,7 @@ shouldHaveSizeLowerOrEqual expected = simpleAssertion predicate message
         <> ", but should be lower or equal "
         <> show expected
 
--- | verify if the given list has expected prefix
+-- | verify if the given list has an expected prefix
 --
 -- @
 --  assertThat [1..10] $ shouldStartWith [0..4]
@@ -63,7 +63,7 @@ shouldStartWith expected = forceError (shouldHaveSizeLowerOrEqual expectedLenght
         <> ", but it start with "
         <> show (actualPrefix x)
 
--- | verify if the given list does not start with prefix
+-- | verify if the given list does not start with a given prefix
 --
 -- @
 --  assertThat [1..10] $ shouldNotStartWith [1..4]
@@ -95,7 +95,7 @@ shouldNotContain expected = simpleAssertion predicate message
     predicate = notElem expected
     message _ = "given list should not contain element " <> show expected <> ", but it doesn."
 
--- | verify if the given list contains same elements as expected list in any order
+-- | verify if the given list contains the same elements as the expected list in any order
 --
 -- @
 --  assertThat [1..10] $ shouldNotStartWith [1..4]

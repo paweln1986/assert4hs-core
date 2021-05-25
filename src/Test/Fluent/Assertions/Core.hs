@@ -39,7 +39,7 @@ import Test.Fluent.Internal.Assertions
 -- Maintainer  : p.nosal1986@gmail.com
 -- Stability   : experimental
 
--- | Verify if given `IO` action throws expected exception.
+-- | Verify if given `IO` action throws the expected exception.
 assertThrows :: (HasCallStack, Exception e) => IO a -> ExceptionSelector e -> IO ()
 assertThrows givenIO selector = assertThrown' defaultConfig givenIO selector (simpleAssertion (const True) (const "should not be invoked"))
 

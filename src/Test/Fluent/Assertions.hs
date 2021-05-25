@@ -86,7 +86,7 @@ import Test.Fluent.Internal.Assertions (Assertion, Assertion', AssertionDefiniti
 
 -- | The 'simpleAssertion' function is a building block of more complicated assertions.
 --
---  It takes one predicate and function to format error message.
+--  It takes one predicate and function to format an error message.
 --
 -- @
 --  myIsEqual x = simpleAssertion (== x) (\\x' -> show x' <> " is not equal to " <> show x)
@@ -100,7 +100,7 @@ simpleAssertion ::
   Assertion a
 simpleAssertion predicate formatter f s = basicAssertion predicate formatter (f s)
 
--- | assert if subject under test is equal to given value
+-- | assert if the subject under test is equal to the given value
 --
 -- @
 --  assertThat 15 $ isEqualTo 16
@@ -230,7 +230,7 @@ focus f assert s = contramap f (assert (f s))
 inside :: (b -> a) -> Assertion a -> Assertion b
 inside f assert' b s = b s <> mconcat (transformAssertions [assert' mempty (f s)] f)
 
--- |  this combinator allows marking following assertion with a given prefix
+-- |  this combinator allows marking the following assertion with a given prefix
 --
 -- @
 -- assertThat (Foo "someName" 15) $

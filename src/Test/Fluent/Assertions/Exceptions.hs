@@ -9,7 +9,7 @@
 -- Maintainer  : p.nosal1986@gmail.com
 -- Stability   : experimental
 --
--- This module provide an assertion for check if expected Exception has been throw by IO action.
+-- This module provides an assertion to check if the expected Exception has been throw by IO action.
 module Test.Fluent.Assertions.Exceptions
   ( -- ** Exception selectors
     anyException,
@@ -37,8 +37,8 @@ anyException = id
 anyIOException :: ExceptionSelector IOException
 anyIOException = id
 
--- | Select all an Exception of given type.
--- This selector should be used with `TypeApplications`
+-- | Select all Exception of a given type. 
+-- This selector should be used with TypeApplications
 --
 -- @
 -- data MyException = ThisException | ThatException

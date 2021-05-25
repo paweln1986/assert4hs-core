@@ -12,6 +12,6 @@ defaultConfig =
   AssertionConfig
     5000000 -- 5 seconds
 
--- | Allow to modify timeout of single assertion
+-- | Allow modifying timeout of a single assertion
 setAssertionTimeout :: Int -> AssertionConfig -> AssertionConfig
 setAssertionTimeout newTimeout config = config {assertionTimeout = newTimeout}

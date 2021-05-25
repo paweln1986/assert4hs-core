@@ -10,7 +10,7 @@
 -- Maintainer  : p.nosal1986@gmail.com
 -- Stability   : experimental
 --
--- This module provide a set of combinators to assert Either type.
+-- This module provides a set of combinators to assert Either type.
 module Test.Fluent.Assertions.Either (isLeft, isRight, extractingRight, extractingLeft) where
 
 import qualified Data.Either as Either
@@ -24,7 +24,7 @@ import Test.Fluent.Assertions
     simpleAssertion,
   )
 
--- | assert if subject under test is Left
+-- | assert if the subject under test is Left
 --
 -- @
 --  assertThat (Left 10) isLeft
@@ -34,7 +34,7 @@ isLeft = inside Either.isLeft (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Left, but is Right"
 
--- | assert if subject under test is Right
+-- | assert if the subject under test is Right
 --
 -- @
 --  assertThat (Left 10) isRight
@@ -44,7 +44,7 @@ isRight = inside Either.isRight (simpleAssertion (== True) assertionMessage)
   where
     assertionMessage _ = "should be Right, but is Left"
 
--- | assert if subject under test is Right and extract contained value
+-- | assert if the subject under test is Right and extract contained value
 --
 -- @
 --  assertThat (Left 10) extractingRight
@@ -52,7 +52,7 @@ isRight = inside Either.isRight (simpleAssertion (== True) assertionMessage)
 extractingRight :: HasCallStack => Assertion' (Either a b) b
 extractingRight = forceError isRight . focus (\case (Right a) -> a)
 
--- | assert if subject under test is Left and extract contained value
+-- | assert if the subject under test is Left and extract contained value
 --
 -- @
 --  assertThat (Left 10) extractingLeft

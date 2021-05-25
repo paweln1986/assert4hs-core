@@ -70,7 +70,7 @@
 
 ##### Changing subject uder test
 
-The `focus` function allows to transform the subject under test, but the original subject is lost. Function `inside` is similar to the function `focus`, but preserve theoriginal subject under test.
+The `focus` function allows to transform the subject under test, but the original subject is lost. Function `inside` is similar to the function `focus`, but preserve the original subject under test.
 
 ```haskell
 data Foo = Foo {name :: String, age :: Int} deriving (Show, Eq)
@@ -126,7 +126,7 @@ assertThat (Foo "someName" 15) $
 
 ##### Custom assertions
 
- It is sometimes convenient to create a custom assertion which explicitly describes what is testing. For this purpose we have `simpleAssertion` function
+ It is sometimes convenient to create a custom assertion that explicitly describes what is testing. For this purpose, we have `simpleAssertion` function
 
 ```haskell
 isSuitableForEmployment :: Assertion Foo

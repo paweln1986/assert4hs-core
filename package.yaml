@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/pawe
 
 dependencies:
 - base >= 4.7 && < 5
-- pretty-diff >= 0.4.0.0
+- pretty-diff
 - data-default
 - text
 

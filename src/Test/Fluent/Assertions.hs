@@ -274,7 +274,7 @@ forceError :: Assertion a -> Assertion a
 forceError assert' b s = SequentialAssertions [b s] <> mconcat (transformAssertions [assert' mempty s] id)
 
 formatMessage :: Show a => Bool -> String -> a -> a -> String
-formatMessage True message a a' = "given " <> show a' <> " " <> message <> " " <> show a <> "\n" <> pretty a' a
+formatMessage True message a a' = "given " <> show a' <> " " <> message <> " " <> show a <> "\n" <> pretty a' a <> "\n"
 formatMessage False message a a' = "given " <> show a' <> " " <> message <> " " <> show a
 
 formatMessage' :: Show a => String -> a -> String
